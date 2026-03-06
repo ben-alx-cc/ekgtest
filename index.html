@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+  <title>Kardiale Amyloidose – Risiko-Screening</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a3c5e">
+  <meta name="color-scheme" content="light">
+
+  <!-- iOS Standalone -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Amyloidose">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <!-- Preconnect & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #1a3c5e;
+      --accent-light: #2a5a8a;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --shadow: 0 4px 24px rgba(0,0,0,.08);
+      --radius: 16px;
+      --green: #2ecc71;
+      --orange: #f39c12;
+      --red: #e74c3c;
+      --transition: .25s ease;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: #222;
+      font-size: 17px;
+      line-height: 1.5;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      padding: 24px 16px 40px;
+      padding-top: calc(24px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+      padding-left: calc(16px + env(safe-area-inset-left, 0px));
+      padding-right: calc(16px + env(safe-area-inset-right, 0px));
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -.02em;
+    }
+    header p {
+      font-size: .88rem;
+      color: #667;
+      margin-top: 4px;
+    }
+
+    /* ── Progress Bar ── */
+    .progress-wrap {
+      width: 100%;
+      height: 6px;
+      background: #dde3ea;
+      border-radius: 3px;
+      margin-bottom: 32px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width .4s ease;
+    }
+
+    /* ── Question Card ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn .35s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .question-number {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--accent-light);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+    .question-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 28px;
+      line-height: 1.45;
+    }
+
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .answer-btn {
+      display: block;
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 1rem;
+      font-family: inherit;
+      font-weight: 500;
+      text-align: left;
+      color: var(--accent);
+      background: #f0f4f8;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), transform .15s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .answer-btn:hover {
+      background: #e4ecf4;
+      border-color: var(--accent-light);
+    }
+    .answer-btn:active {
+      transform: scale(.98);
+    }
+    .answer-btn.selected {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ── Intro Screen ── */
+    .intro-icon {
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .intro-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .intro-body {
+      font-size: .95rem;
+      color: #555;
+      text-align: center;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    .start-btn, .restart-btn, .pdf-btn {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      font-size: 1.05rem;
+      font-family: inherit;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background var(--transition), transform .15s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .start-btn:hover, .restart-btn:hover, .pdf-btn:hover {
+      background: var(--accent-light);
+    }
+    .start-btn:active, .restart-btn:active, .pdf-btn:active {
+      transform: scale(.98);
+    }
+
+    .pdf-btn {
+      margin-top: 12px;
+    }
+
+    /* ── Result Screen ── */
+    .result-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      box-shadow: 0 6px 28px rgba(0,0,0,.12);
+    }
+    .result-label {
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .result-text {
+      font-size: .97rem;
+      color: #444;
+      text-align: center;
+      line-height: 1.65;
+      margin-bottom: 32px;
+    }
+    .result-text strong { font-weight: 600; }
+    .disclaimer {
+      font-size: .78rem;
+      color: #999;
+      text-align: center;
+      margin-top: 24px;
+      line-height: 1.55;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+
+    /* ── Hidden helper ── */
+    .hidden { display: none !important; }
+
+    /* ── Small-screen tweaks ── */
+    @media (max-width: 400px) {
+      .card { padding: 24px 16px; }
+      .question-text { font-size: 1.05rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Kardiale Amyloidose</h1>
+    <p>Risiko-Screening</p>
+  </header>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- ═══ Screens ═══ -->
+  <div id="introScreen" class="card">
+    <div class="intro-icon">🫀</div>
+    <div class="intro-title">Herzlich willkommen</div>
+    <p class="intro-body">
+      Dieser kurze Fragebogen hilft Ihnen einzuschätzen, ob bestimmte
+      Beschwerden auf eine kardiale Amyloidose hindeuten könnten.<br><br>
+      Es sind <strong>8 Fragen</strong> – die Beantwortung dauert etwa
+      <strong>2 Minuten</strong>.
+    </p>
+    <button class="start-btn" id="startBtn">Fragebogen starten</button>
+  </div>
+
+  <div id="questionScreen" class="card hidden"></div>
+
+  <div id="resultScreen" class="card hidden"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  /* ──────────────────── Fragen-Datenmodell ──────────────────── */
+  const questions = [
+    {
+      text: 'Wie alt sind Sie?',
+      answers: [
+        { label: 'Unter 60 Jahre',      points: 0 },
+        { label: '60–74 Jahre',          points: 1 },
+        { label: '75 Jahre oder älter',  points: 2 },
+      ]
+    },
+    {
+      text: 'Haben Sie Atemnot bei alltäglichen Tätigkeiten (z.\u00a0B. Treppensteigen)?',
+      answers: [
+        { label: 'Nein',        points: 0 },
+        { label: 'Ja, leicht',  points: 1 },
+        { label: 'Ja, stark',   points: 2 },
+      ]
+    },
+    {
+      text: 'Haben Sie geschwollene Beine oder Knöchel?',
+      answers: [
+        { label: 'Nein',          points: 0 },
+        { label: 'Gelegentlich',  points: 1 },
+        { label: 'Regelmäßig',    points: 2 },
+      ]
+    },
+    {
+      text: 'Haben Sie Schwindel, Ohnmacht oder das Gefühl, gleich umzufallen?',
+      answers: [
+        { label: 'Nein', points: 0 },
+        { label: 'Ja',   points: 2 },
+      ]
+    },
+    {
+      text: 'Wurden bei Ihnen jemals ein Karpaltunnelsyndrom oder eine Spinalkanalstenose diagnostiziert?',
+      answers: [
+        { label: 'Nein',          points: 0 },
+        { label: 'Eins davon',    points: 1 },
+        { label: 'Beides',        points: 2 },
+      ]
+    },
+    {
+      text: 'Haben Sie Kribbeln, Taubheitsgefühl oder Schmerzen in Händen oder Füßen (Polyneuropathie)?',
+      answers: [
+        { label: 'Nein', points: 0 },
+        { label: 'Ja',   points: 2 },
+      ]
+    },
+    {
+      text: 'Wurde bei Ihnen oder einem Elternteil/Geschwister eine Herzmuskelverdickung (HCM) oder Amyloidose diagnostiziert?',
+      answers: [
+        { label: 'Nein', points: 0 },
+        { label: 'Ja',   points: 2 },
+      ]
+    },
+    {
+      text: 'Wurden Ihnen Blutdruckmittel (ACE-Hemmer oder Betablocker) verschrieben, die Sie schlecht vertragen haben?',
+      answers: [
+        { label: 'Nein', points: 0 },
+        { label: 'Ja',   points: 1 },
+      ]
+    },
+  ];
+
+  /* ──────────────────── Risiko-Stufen ──────────────────── */
+  const riskLevels = [
+    {
+      max: 3,
+      label: 'Niedriges Risiko',
+      color: '#2ecc71',
+      icon: '✔',
+      text: 'Ihre Angaben deuten derzeit nicht auf ein erhöhtes Risiko hin. Sprechen Sie bei anhaltenden Beschwerden mit Ihrem Hausarzt.',
+    },
+    {
+      max: 7,
+      label: 'Mittleres Risiko',
+      color: '#f39c12',
+      icon: '⚠',
+      text: 'Einige Ihrer Angaben könnten auf eine kardiale Belastung hinweisen. Wir empfehlen, zeitnah einen Arzt aufzusuchen.',
+    },
+    {
+      max: 15,
+      label: 'Hohes Risiko',
+      color: '#e74c3c',
+      icon: '⚑',
+      text: 'Mehrere Ihrer Angaben decken sich mit bekannten Warnzeichen. Bitte suchen Sie <strong>baldmöglichst</strong> einen Kardiologen auf.',
+    },
+  ];
+
+  /* ──────────────────── State ──────────────────── */
+  let currentIndex = 0;
+  let totalScore = 0;
+  let verlauf = [];
+  let resultTimestamp = null;
+
+  /* ──────────────────── DOM-Referenzen ──────────────────── */
+  const introScreen    = document.getElementById('introScreen');
+  const questionScreen = document.getElementById('questionScreen');
+  const resultScreen   = document.getElementById('resultScreen');
+  const progressBar    = document.getElementById('progressBar');
+  const progressWrap   = document.getElementById('progressWrap');
+  const startBtn       = document.getElementById('startBtn');
+
+  /* ──────────────────── Fortschrittsbalken ──────────────────── */
+  function updateProgress() {
+    const pct = ((currentIndex) / questions.length) * 100;
+    progressBar.style.width = pct + '%';
+  }
+
+  /* ──────────────────── Frage rendern ──────────────────── */
+  function renderQuestion() {
+    const q = questions[currentIndex];
+    questionScreen.innerHTML = '';
+
+    const num = document.createElement('div');
+    num.className = 'question-number';
+    num.textContent = `Frage ${currentIndex + 1} von ${questions.length}`;
+
+    const txt = document.createElement('div');
+    txt.className = 'question-text';
+    txt.textContent = q.text;
+
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    q.answers.forEach((a) => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = a.label;
+      btn.addEventListener('click', () => handleAnswer(btn, a.label, a.points));
+      answersDiv.appendChild(btn);
+    });
+
+    questionScreen.append(num, txt, answersDiv);
+
+    /* Neue Einblend-Animation auslösen */
+    questionScreen.style.animation = 'none';
+    void questionScreen.offsetHeight;          // Reflow erzwingen
+    questionScreen.style.animation = '';
+
+    updateProgress();
+  }
+
+  /* ──────────────────── Antwort verarbeiten ──────────────────── */
+  function handleAnswer(btn, answerLabel, points) {
+    btn.classList.add('selected');
+    totalScore += points;
+
+    verlauf.push({
+      frage: questions[currentIndex].text,
+      antwort: answerLabel,
+      punkte: points,
+    });
+
+    setTimeout(() => {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }, 300);
+  }
+
+  /* ──────────────────── Ergebnis anzeigen ──────────────────── */
+  function showResult() {
+    questionScreen.classList.add('hidden');
+    progressBar.style.width = '100%';
+    resultTimestamp = new Date();
+
+    const level = riskLevels.find(r => totalScore <= r.max);
+
+    resultScreen.innerHTML = `
+      <div class="result-icon" style="background:${level.color}; color:#fff;">
+        ${level.icon}
+      </div>
+      <div class="result-label" style="color:${level.color};">
+        ${level.label}
+      </div>
+      <p class="result-text">${level.text}</p>
+      <button class="restart-btn" id="restartBtn">Fragebogen neu starten</button>
+      <button class="pdf-btn restart-btn" id="pdfBtn">Ergebnis als PDF speichern</button>
+      <p class="disclaimer">
+        Diese App ersetzt keine ärztliche Diagnose. Die Ergebnisse dienen
+        ausschließlich zur Orientierung.
+      </p>
+    `;
+
+    resultScreen.classList.remove('hidden');
+
+    document.getElementById('restartBtn').addEventListener('click', restart);
+    document.getElementById('pdfBtn').addEventListener('click', generatePDF);
+  }
+
+  /* ──────────────────── Neustart ──────────────────── */
+  function restart() {
+    currentIndex = 0;
+    totalScore = 0;
+    verlauf = [];
+    resultTimestamp = null;
+    resultScreen.classList.add('hidden');
+    questionScreen.classList.add('hidden');
+    introScreen.classList.remove('hidden');
+    progressBar.style.width = '0%';
+  }
+
+  /* ──────────────────── PDF-Export ──────────────────── */
+  function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const pageW = 210;
+    const marginL = 20;
+    const marginR = 20;
+    const contentW = pageW - marginL - marginR;
+    let y = 25;
+
+    const level = riskLevels.find(r => totalScore <= r.max);
+    const maxScore = 15;
+
+    /* ── Hilfsfunktionen ── */
+    function addWrappedText(text, x, startY, maxW, fontSize, style) {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', style || 'normal');
+      const lines = doc.splitTextToSize(text, maxW);
+      doc.text(lines, x, startY);
+      return startY + lines.length * (fontSize * 0.4 + 0.4);
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function formatDateTime(d) {
+      return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear()
+        + '  ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' Uhr';
+    }
+
+    /* ── 1. Kopfzeile ── */
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(26, 60, 94);
+    doc.text('Kardiale Amyloidose \u2013 Screening-Ergebnis', marginL, y);
+    y += 9;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Erstellt am: ' + formatDateTime(resultTimestamp), marginL, y);
+    y += 14;
+
+    /* ── 2. Risikoergebnis ── */
+    const rgb = hexToRgb(level.color);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(rgb.r, rgb.g, rgb.b);
+    doc.text(level.label.toUpperCase(), marginL, y);
+    y += 8;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Erreichte Punkte: ' + totalScore + ' von ' + maxScore, marginL, y);
+    y += 9;
+
+    const plainText = level.text.replace(/<[^>]*>/g, '');
+    y = addWrappedText(plainText, marginL, y, contentW, 11, 'normal');
+    y += 10;
+
+    /* ── 3. Antwort\u00fcbersicht (Tabelle) ── */
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(26, 60, 94);
+    doc.text('Antwort\u00fcbersicht', marginL, y);
+    y += 8;
+
+    const colNr = 12;
+    const colFrage = 100;
+    const colAntwort = contentW - colNr - colFrage;
+    const colX = [marginL, marginL + colNr, marginL + colNr + colFrage];
+    const rowPadX = 2;
+    const rowPadY = 3;
+
+    /* Tabellenkopf */
+    doc.setFillColor(26, 60, 94);
+    doc.rect(marginL, y, contentW, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Nr.', colX[0] + rowPadX, y + 5.5);
+    doc.text('Frage', colX[1] + rowPadX, y + 5.5);
+    doc.text('Ihre Antwort', colX[2] + rowPadX, y + 5.5);
+    y += 8;
+
+    /* Tabellenzeilen */
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+
+    verlauf.forEach((v, i) => {
+      const frageLines = doc.splitTextToSize(v.frage, colFrage - 2 * rowPadX);
+      const antwortLines = doc.splitTextToSize(v.antwort, colAntwort - 2 * rowPadX);
+      const lineCount = Math.max(frageLines.length, antwortLines.length);
+      const lineH = 4.2;
+      const rowH = lineCount * lineH + 2 * rowPadY;
+
+      /* Seitenumbruch pr\u00fcfen */
+      if (y + rowH > 270) {
+        doc.addPage();
+        y = 20;
+      }
+
+      /* Abwechselnd eingef\u00e4rbter Zeilenhintergrund */
+      if (i % 2 === 1) {
+        doc.setFillColor(244, 246, 249);
+        doc.rect(marginL, y, contentW, rowH, 'F');
+      }
+
+      doc.setTextColor(50, 50, 50);
+      doc.text(String(i + 1), colX[0] + rowPadX, y + rowPadY + lineH - 0.5);
+      doc.text(frageLines, colX[1] + rowPadX, y + rowPadY + lineH - 0.5);
+      doc.text(antwortLines, colX[2] + rowPadX, y + rowPadY + lineH - 0.5);
+
+      y += rowH;
+    });
+
+    /* Tabellenrahmen unten */
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.line(marginL, y, marginL + contentW, y);
+
+    /* ── 4. Disclaimer ── */
+    y += 12;
+    if (y > 265) { doc.addPage(); y = 20; }
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9);
+    doc.setTextColor(140, 140, 140);
+    const disclaimer = 'Dieses Dokument wurde automatisch erstellt und ersetzt keine \u00e4rztliche Diagnose. '
+      + 'Es dient ausschlie\u00dflich zur pers\u00f6nlichen Orientierung. '
+      + 'Bitte legen Sie dieses Dokument Ihrem Arzt vor.';
+    addWrappedText(disclaimer, marginL, y, contentW, 9, 'italic');
+
+    /* ── Dateiname und Speichern ── */
+    const d = resultTimestamp;
+    const fname = 'amyloidose-screening-'
+      + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate())
+      + '.pdf';
+    doc.save(fname);
+  }
+
+  /* Hex-Farbwert nach {r, g, b} konvertieren */
+  function hexToRgb(hex) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+
+  /* ──────────────────── Start ──────────────────── */
+  startBtn.addEventListener('click', () => {
+    introScreen.classList.add('hidden');
+    questionScreen.classList.remove('hidden');
+    renderQuestion();
+  });
+
+  /* ──────────────────── Service Worker ──────────────────── */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  /* ──────────────────── Apple Touch Icon (canvas-basiert) ──────────────────── */
+  (function generateAppleTouchIcon() {
+    try {
+      const s = 180;
+      const c = document.createElement('canvas');
+      c.width = s; c.height = s;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#1a3c5e';
+      ctx.beginPath();
+      ctx.roundRect(0, 0, s, s, s * 0.22);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(s / 2, s * 0.49);
+      ctx.scale(s / 512, s / 512);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(0, 60);
+      ctx.bezierCurveTo(0, 60, -110, -50, -110, -100);
+      ctx.bezierCurveTo(-110, -160, -50, -180, 0, -120);
+      ctx.bezierCurveTo(50, -180, 110, -160, 110, -100);
+      ctx.bezierCurveTo(110, -50, 0, 60, 0, 60);
+      ctx.fill();
+
+      ctx.strokeStyle = '#e74c3c';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-100, 10);
+      ctx.lineTo(-40, 10);
+      ctx.lineTo(-20, -50);
+      ctx.lineTo(0, 40);
+      ctx.lineTo(20, -30);
+      ctx.lineTo(40, 10);
+      ctx.lineTo(100, 10);
+      ctx.stroke();
+      ctx.restore();
+
+      const link = document.querySelector('link[rel="apple-touch-icon"]');
+      if (link) link.href = c.toDataURL('image/png');
+    } catch (_) {}
+  })();
+</script>
+
+</body>
+</html>

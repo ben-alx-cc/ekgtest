@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#1a3c5e"/>
+  <g transform="translate(256,250)">
+    <!-- Herzform -->
+    <path d="M0 60 C0 60,-110-50,-110-100 C-110-160,-50-180,0-120 C50-180,110-160,110-100 C110-50,0 60,0 60Z"
+          fill="#ffffff" opacity=".95"/>
+    <!-- EKG-Linie -->
+    <path d="M-100 10 L-40 10 L-20-50 L0 40 L20-30 L40 10 L100 10"
+          stroke="#e74c3c" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>
