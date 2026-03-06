@@ -216,6 +216,69 @@
     .pdf-btn {
       margin-top: 12px;
     }
+    .start-btn:disabled, .restart-btn:disabled {
+      opacity: .4;
+      pointer-events: none;
+    }
+
+    /* ── User Data Screen ── */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      display: block;
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: #222;
+      background: #f0f4f8;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color var(--transition), background var(--transition);
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      border-color: var(--accent-light);
+      background: #fff;
+    }
+    .form-input::placeholder {
+      color: #a0aab4;
+    }
+    .privacy-hint {
+      font-size: .75rem;
+      color: #999;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    /* ── Back Button ── */
+    .back-btn {
+      display: inline-block;
+      background: none;
+      border: none;
+      color: var(--accent-light);
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 4px 0;
+      margin-bottom: 12px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .back-btn:active {
+      opacity: .6;
+    }
 
     /* ── Result Screen ── */
     .result-icon {
@@ -286,6 +349,22 @@
       <strong>2 Minuten</strong>.
     </p>
     <button class="start-btn" id="startBtn">Fragebogen starten</button>
+  </div>
+
+  <div id="userDataScreen" class="card hidden">
+    <div class="intro-title">Ihre Angaben</div>
+    <div style="flex:1;">
+      <div class="form-group">
+        <label class="form-label" for="inputName">Name</label>
+        <input class="form-input" id="inputName" type="text" placeholder="Vor- und Nachname" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="inputPatNr">Patienten-Nummer</label>
+        <input class="form-input" id="inputPatNr" type="text" placeholder="z.B. 123456" autocomplete="off">
+      </div>
+    </div>
+    <button class="start-btn" id="continueBtn" disabled>Weiter</button>
+    <p class="privacy-hint">Ihre Daten verlassen nicht den Browser.</p>
   </div>
 
   <div id="questionScreen" class="card hidden"></div>
@@ -390,14 +469,20 @@
   let totalScore = 0;
   let verlauf = [];
   let resultTimestamp = null;
+  let userName = '';
+  let patientenNr = '';
 
   /* ──────────────────── DOM-Referenzen ──────────────────── */
   const introScreen    = document.getElementById('introScreen');
+  const userDataScreen = document.getElementById('userDataScreen');
   const questionScreen = document.getElementById('questionScreen');
   const resultScreen   = document.getElementById('resultScreen');
   const progressBar    = document.getElementById('progressBar');
   const progressWrap   = document.getElementById('progressWrap');
   const startBtn       = document.getElementById('startBtn');
+  const continueBtn    = document.getElementById('continueBtn');
+  const inputName      = document.getElementById('inputName');
+  const inputPatNr     = document.getElementById('inputPatNr');
 
   /* ──────────────────── Fortschrittsbalken ──────────────────── */
   function updateProgress() {
@@ -406,9 +491,17 @@
   }
 
   /* ──────────────────── Frage rendern ──────────────────── */
-  function renderQuestion() {
+  function renderQuestion(preselectedAnswer) {
     const q = questions[currentIndex];
     questionScreen.innerHTML = '';
+
+    if (currentIndex > 0) {
+      const backBtn = document.createElement('button');
+      backBtn.className = 'back-btn';
+      backBtn.textContent = '\u2190 Zur\u00fcck';
+      backBtn.addEventListener('click', goBack);
+      questionScreen.appendChild(backBtn);
+    }
 
     const num = document.createElement('div');
     num.className = 'question-number';
@@ -424,6 +517,9 @@
     q.answers.forEach((a) => {
       const btn = document.createElement('button');
       btn.className = 'answer-btn';
+      if (preselectedAnswer && a.label === preselectedAnswer) {
+        btn.classList.add('selected');
+      }
       btn.textContent = a.label;
       btn.addEventListener('click', () => handleAnswer(btn, a.label, a.points));
       answersDiv.appendChild(btn);
@@ -437,6 +533,14 @@
     questionScreen.style.animation = '';
 
     updateProgress();
+  }
+
+  /* ──────────────────── Zurück-Navigation ──────────────────── */
+  function goBack() {
+    const last = verlauf.pop();
+    totalScore -= last.punkte;
+    currentIndex--;
+    renderQuestion(last.antwort);
   }
 
   /* ──────────────────── Antwort verarbeiten ──────────────────── */
@@ -490,6 +594,13 @@
     document.getElementById('pdfBtn').addEventListener('click', generatePDF);
   }
 
+  /* ──────────────────── Nutzerdaten-Validierung ──────────────────── */
+  function validateUserData() {
+    continueBtn.disabled = !(inputName.value.trim() && inputPatNr.value.trim());
+  }
+  inputName.addEventListener('input', validateUserData);
+  inputPatNr.addEventListener('input', validateUserData);
+
   /* ──────────────────── Neustart ──────────────────── */
   function restart() {
     currentIndex = 0;
@@ -541,6 +652,11 @@
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Name: ' + userName, marginL, y);
+    doc.text('Patienten-Nr.: ' + patientenNr, pageW / 2, y);
+    y += 7;
+
     doc.setTextColor(100, 100, 100);
     doc.text('Erstellt am: ' + formatDateTime(resultTimestamp), marginL, y);
     y += 14;
@@ -653,6 +769,16 @@
   /* ──────────────────── Start ──────────────────── */
   startBtn.addEventListener('click', () => {
     introScreen.classList.add('hidden');
+    userDataScreen.classList.remove('hidden');
+    inputName.value = userName;
+    inputPatNr.value = patientenNr;
+    validateUserData();
+  });
+
+  continueBtn.addEventListener('click', () => {
+    userName = inputName.value.trim();
+    patientenNr = inputPatNr.value.trim();
+    userDataScreen.classList.add('hidden');
     questionScreen.classList.remove('hidden');
     renderQuestion();
   });
